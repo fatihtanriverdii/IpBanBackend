@@ -4,6 +4,7 @@ import fatyidha.io.ipbanapp.service.security.JwtService;
 import fatyidha.io.ipbanapp.service.security.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
@@ -30,11 +31,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String username;
+        String ipAddress;
 
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
+        ipAddress = request.getHeader("X-Forwarded-For");
+        if(ipAddress == null || ipAddress.isEmpty()){
+            ipAddress = request.getRemoteAddr();
+        }
+
+        if(authHeader == null || !authHeader.startsWith("Bearer ") || userService.banState(jwtService.extractUsername(authHeader.substring(7)), ipAddress)) {
+            Cookie cookie = new Cookie("token", null);
+            cookie.setMaxAge(3600);
+            cookie.setPath("/");
+            response.addCookie(cookie);
             filterChain.doFilter(request, response);
             return;
         }
+
         jwt = authHeader.substring(7);
         username = jwtService.extractUsername(jwt);
         if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

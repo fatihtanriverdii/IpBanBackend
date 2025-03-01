@@ -1,12 +1,12 @@
 package fatyidha.io.ipbanapp.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "_user")
@@ -26,8 +26,18 @@ public class User implements UserDetails {
     private String lastName;
     @Column(unique = true)
     private String email;
-    private String ipAddress;
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.USER;
     private boolean isActive;
+    private String token;
+    private Date tokenExpiryDate;
+
+    @Builder.Default
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @JsonManagedReference
+    private Set<IpAddress> ipAddresses = new HashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

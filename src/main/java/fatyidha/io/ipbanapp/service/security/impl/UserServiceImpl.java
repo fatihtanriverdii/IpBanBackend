@@ -2,6 +2,7 @@ package fatyidha.io.ipbanapp.service.security.impl;
 
 import fatyidha.io.ipbanapp.model.User;
 import fatyidha.io.ipbanapp.repository.UserRepository;
+import fatyidha.io.ipbanapp.service.security.IpAddressService;
 import fatyidha.io.ipbanapp.service.security.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,13 +10,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final IpAddressService ipAddressService;
 
     @Override
     public UserDetailsService getUserDetailsService() {
@@ -33,22 +35,12 @@ public class UserServiceImpl implements UserService {
         return findByEmail(email);
     }
 
-    public String isActiveFalse(String username) throws Exception {
+    public String setExpirationEnd(String username) throws Exception {
         User user = findByUsername(username);
         if(user != null){
-            user.setActive(false);
+            user.setTokenExpiryDate(new Date(System.currentTimeMillis() - 60 * 1000));
             userRepository.saveAndFlush(user);
-            return "isActive set to false";
-        }
-        return "user not found";
-    }
-
-    public String isActiveTrue(String username) throws Exception {
-        User user = findByUsername(username);
-        if(user != null){
-            user.setActive(true);
-            userRepository.saveAndFlush(user);
-            return "isActive set to false";
+            return "tokenExpiryDate set to " + user.getTokenExpiryDate();
         }
         return "user not found";
     }
@@ -57,10 +49,30 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
-    public boolean isBan(String username, String userIpAddress) throws Exception {
+    public void saveUser(User user) {
+        userRepository.save(user);
+    }
+
+    public User getUserByUsername(String username){
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+    }
+
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    /*public String banIp(String username){
         var user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new Exception("User not found"));
-        if(user.getIpAddress().equals(userIpAddress) && !user.isActive()){
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+
+    }*/
+
+    public boolean banState(String username, String userIpAddress) {
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        if(ipAddressService.getIsBannedByIpAddress(userIpAddress) || !user.isActive()){
             return true;
         }
         return false;

@@ -1,5 +1,6 @@
 package fatyidha.io.ipbanapp.service.security.impl;
 
+import fatyidha.io.ipbanapp.repository.UserRepository;
 import fatyidha.io.ipbanapp.service.security.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -18,8 +19,13 @@ import java.util.function.Function;
 
 @Service
 public class JwtServiceImpl implements JwtService {
+    private final UserRepository userRepository;
     @Value("${token.signing.key}")
     private String jwtSigningKey;
+
+    public JwtServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public String generateToken(UserDetails userDetails) {
@@ -48,14 +54,14 @@ public class JwtServiceImpl implements JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJwt(token).getBody();
+        return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
     }
 
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        return extractExpiration(token).before(userRepository.findTokenExpirationDateByUsername(extractUsername(token)));
     }
 
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractCalim(token, Claims::getExpiration);
     }
 

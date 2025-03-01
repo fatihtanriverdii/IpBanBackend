@@ -11,10 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthenticationService authenticationService;
-    private final UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<JwtAuthenticationResponseDto> register(@RequestBody RegisterRequestDto registerRequestDto, HttpServletResponse response, HttpServletRequest request) throws Exception {
@@ -31,42 +27,47 @@ public class AuthController {
             ipAddress = request.getRemoteAddr();
         }
 
-        String token = authenticationService.register(registerRequestDto, ipAddress).getToken();
+        var authResponse = authenticationService.register(registerRequestDto, ipAddress);
+        String token = authResponse.getToken();
 
-        Cookie cookie = new Cookie("token", token);
-        cookie.setHttpOnly(true);
-        cookie.setMaxAge(3600);
-        cookie.setPath("/");
-        response.addCookie(cookie);
+        if(token != null){
+            Cookie cookie = new Cookie("token", token);
+            cookie.setMaxAge(3600);
+            cookie.setPath("/");
+            response.addCookie(cookie);
+        }
 
-        return ResponseEntity.ok(new JwtAuthenticationResponseDto(token, null));
+        return ResponseEntity.ok(new JwtAuthenticationResponseDto(token, authResponse.getMessage()));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtAuthenticationResponseDto> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response, HttpServletRequest request) throws Exception {
+    public ResponseEntity<JwtAuthenticationResponseDto> login(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response, HttpServletRequest request) {
         String ipAddress = request.getHeader("X-Forwarded-For");
         if(ipAddress == null || ipAddress.isEmpty()){
             ipAddress = request.getRemoteAddr();
         }
-
-        boolean isBanState = userService.isBan(loginRequestDto.getUsername(), ipAddress);
-
-        if(!isBanState){
-            String token = authenticationService.login(loginRequestDto).getToken();
-
+        var authResponse = authenticationService.login(loginRequestDto, ipAddress);
+        String token = authResponse.getToken();
+        if(token != null){
             Cookie cookie = new Cookie("token", token);
-            //cookie.setHttpOnly(true);
             cookie.setMaxAge(3600);
             cookie.setPath("/");
             response.addCookie(cookie);
-
-            return ResponseEntity.ok(new JwtAuthenticationResponseDto(token, null));
+            return ResponseEntity.ok(new JwtAuthenticationResponseDto(token, authResponse.getMessage()));
         }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new JwtAuthenticationResponseDto(null,"Kullanıcı banlı"));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new JwtAuthenticationResponseDto(token, authResponse.getMessage()));
     }
 
+    /*@PostMapping("/admin/login")
+    public ResponseEntity<JwtAuthenticationResponseDto> adminLogin(@RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response, HttpServletRequest request) throws Exception {
+        String ipAddress = request.getHeader("X-Forwarded-For");
+        if (ipAddress == null || ipAddress.isEmpty()) {
+            ipAddress = request.getRemoteAddr();
+        }
+    }*/
+
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) throws Exception {
+    public ResponseEntity<?> logout(HttpServletResponse response) {
         Cookie cookie = new Cookie("token", null);
         cookie.setMaxAge(0);
         cookie.setPath("/");

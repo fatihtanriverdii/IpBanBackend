@@ -6,5 +6,5 @@ import fatyidha.io.ipbanapp.dto.response.JwtAuthenticationResponseDto;
 
 public interface AuthenticationService {
     JwtAuthenticationResponseDto register(RegisterRequestDto registerRequestDto, String userIpAddress) throws Exception;
-    JwtAuthenticationResponseDto login(LoginRequestDto loginRequestDto);
+    JwtAuthenticationResponseDto login(LoginRequestDto loginRequestDto, String userIpAddress);
 }
