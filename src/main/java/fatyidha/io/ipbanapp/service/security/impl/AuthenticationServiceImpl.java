@@ -41,6 +41,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             addIpAddress(user, userIpAddress);
             return JwtAuthenticationResponseDto.builder().token(jwt).build();
         }
+        IpAddress tempIpAdd = ipAddressService.getByIpAddress(userIpAddress);
+        user.getIpAddresses().add(tempIpAdd);
         userService.saveUser(user);
         return JwtAuthenticationResponseDto.builder().token(jwt).build();
     }
@@ -78,19 +80,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private void addIpAddress(User user, String userIpAddress) {
-        var ipAddress = IpAddress.builder().ipAddress(userIpAddress).createdDate(new Date(System.currentTimeMillis())).build();
-        Set<IpAddress> ipAddressSet;
-        Set<User> userSet;
-        ipAddressSet = user.getIpAddresses();
-        userSet = ipAddress.getUsers();
+        //var ipAddress = IpAddress.builder().ipAddress(userIpAddress).createdDate(new Date(System.currentTimeMillis())).build();
 
-        ipAddressSet.add(ipAddress);
-        userSet.add(user);
-
-        user.setIpAddresses(ipAddressSet);
-        ipAddress.setUsers(userSet);
-
+        IpAddress ipAddress = new IpAddress();
+        ipAddress.setIpAddress(userIpAddress);
+        IpAddress ip = ipAddressService.saveIpAddress(ipAddress);
+        user.getIpAddresses().add(ip);
         userService.saveUser(user);
-        ipAddressService.saveIpAddress(ipAddress);
     }
 }

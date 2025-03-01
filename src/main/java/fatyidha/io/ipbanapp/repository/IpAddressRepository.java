@@ -11,6 +11,6 @@ import java.util.Optional;
 @Repository
 public interface IpAddressRepository extends JpaRepository<IpAddress, Long> {
     boolean existsByIpAddress(@Param("ipAddress") String ipAddress);
-    @Query("SELECT i.isBanned FROM IpAddress i WHERE i.ipAddress = :ipAddress")
-    boolean findIsBannedByIpAddress(@Param("ipAddress") String ipAddress);
+    //@Query("SELECT i.isBanned FROM IpAddress i WHERE i.ipAddress = :ipAddress")
+    Optional<IpAddress> findByIpAddress(@Param("ipAddress") String ipAddress);
 }

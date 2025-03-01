@@ -12,14 +12,22 @@ public class IpAddressServiceImpl implements IpAddressService {
     private final IpAddressRepository ipAddressRepository;
 
     public boolean getIsBannedByIpAddress(String ipAddress) {
-        return ipAddressRepository.findIsBannedByIpAddress(ipAddress);
+        IpAddress userIpAddress = ipAddressRepository.findByIpAddress(ipAddress)
+                .orElseThrow(() -> new RuntimeException("ip address not found"));
+        return userIpAddress.isBanned();
+    }
+
+    @Override
+    public IpAddress getByIpAddress(String ipAddress) {
+        return ipAddressRepository.findByIpAddress(ipAddress)
+                .orElseThrow(() -> new RuntimeException("ip address not found"));
     }
 
     public boolean existsByIpAddress(String ipAddress) {
         return ipAddressRepository.existsByIpAddress(ipAddress);
     }
 
-    public void saveIpAddress(IpAddress ipAddress) {
-        ipAddressRepository.save(ipAddress);
+    public IpAddress saveIpAddress(IpAddress ipAddress) {
+        return ipAddressRepository.save(ipAddress);
     }
 }

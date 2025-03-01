@@ -29,9 +29,9 @@ public class IpAddress {
 
     @Builder.Default
     @ManyToMany(mappedBy = "ipAddresses", fetch = FetchType.LAZY)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
+    //@EqualsAndHashCode.Exclude
+    //@ToString.Exclude
     @JsonBackReference
-    private Set<User> users = new HashSet<>();
+    private List<User> users = new ArrayList<>();
 
 }

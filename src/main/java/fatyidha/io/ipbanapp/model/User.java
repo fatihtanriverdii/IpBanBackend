@@ -34,10 +34,10 @@ public class User implements UserDetails {
 
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
+    //@EqualsAndHashCode.Exclude
+    //@ToString.Exclude
     @JsonManagedReference
-    private Set<IpAddress> ipAddresses = new HashSet<>();
+    private List<IpAddress> ipAddresses = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -4,6 +4,9 @@ import fatyidha.io.ipbanapp.model.IpAddress;
 
 public interface IpAddressService {
     boolean getIsBannedByIpAddress(String ipAddress);
+
+    IpAddress getByIpAddress(String ipAddress);
+
     boolean existsByIpAddress(String ipAddress);
-    void saveIpAddress(IpAddress ipAddress);
+    IpAddress saveIpAddress(IpAddress ipAddress);
 }
