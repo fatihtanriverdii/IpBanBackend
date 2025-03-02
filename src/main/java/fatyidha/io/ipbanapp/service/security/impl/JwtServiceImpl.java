@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -18,27 +19,31 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
     private final UserRepository userRepository;
     @Value("${token.signing.key}")
     private String jwtSigningKey;
-
-    public JwtServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
 
+    @Override
     public String extractUsername(String token) {
         return extractCalim(token, Claims::getSubject);
     }
 
+    @Override
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    @Override
+    public Date extractExpiration(String token) {
+        return extractCalim(token, Claims::getExpiration);
     }
 
     private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
@@ -59,10 +64,6 @@ public class JwtServiceImpl implements JwtService {
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(userRepository.findTokenExpirationDateByUsername(extractUsername(token)));
-    }
-
-    public Date extractExpiration(String token) {
-        return extractCalim(token, Claims::getExpiration);
     }
 
     private Key getSigningKey(){

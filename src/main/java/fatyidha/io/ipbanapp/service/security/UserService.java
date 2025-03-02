@@ -11,7 +11,7 @@ public interface UserService {
     String setExpirationEnd(String username) throws Exception;
     List<User> getUsers() throws Exception;
     void saveUser(User user);
-    User getUserByUsername(String username);
+    User getByUsername(String username) throws Exception;
     boolean existsByEmail(String email);
     boolean banState(String username, String userIpAddress);
 }

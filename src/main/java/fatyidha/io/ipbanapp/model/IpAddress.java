@@ -26,12 +26,7 @@ public class IpAddress {
     private Date modifiedDate;
     private int attemptsCount;
 
-
-    @Builder.Default
     @ManyToMany(mappedBy = "ipAddresses", fetch = FetchType.LAZY)
-    //@EqualsAndHashCode.Exclude
-    //@ToString.Exclude
     @JsonBackReference
     private List<User> users = new ArrayList<>();
-
 }

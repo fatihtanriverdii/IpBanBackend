@@ -27,15 +27,12 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String email;
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
+    private Role role;
     private boolean isActive;
     private String token;
     private Date tokenExpiryDate;
 
-    @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    //@EqualsAndHashCode.Exclude
-    //@ToString.Exclude
     @JsonManagedReference
     private List<IpAddress> ipAddresses = new ArrayList<>();
 

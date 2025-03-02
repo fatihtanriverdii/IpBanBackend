@@ -21,13 +21,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDetailsService getUserDetailsService() {
-        return new UserDetailsService() {
-            @Override
-            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                return userRepository.findByUsername(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-            }
-        };
+        return username -> userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     @Override
@@ -35,8 +30,9 @@ public class UserServiceImpl implements UserService {
         return findByEmail(email);
     }
 
+    @Override
     public String setExpirationEnd(String username) throws Exception {
-        User user = findByUsername(username);
+        User user = getByUsername(username);
         if(user != null){
             user.setTokenExpiryDate(new Date(System.currentTimeMillis() - 60 * 1000));
             userRepository.saveAndFlush(user);
@@ -45,19 +41,23 @@ public class UserServiceImpl implements UserService {
         return "user not found";
     }
 
+    @Override
     public List<User> getUsers() throws Exception {
         return userRepository.findAll();
     }
 
+    @Override
     public void saveUser(User user) {
         userRepository.save(user);
     }
 
-    public User getUserByUsername(String username){
+    @Override
+    public User getByUsername(String username) throws Exception {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+                .orElseThrow(() -> new Exception("User not found"));
     }
 
+    @Override
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
@@ -69,6 +69,7 @@ public class UserServiceImpl implements UserService {
 
     }*/
 
+    @Override
     public boolean banState(String username, String userIpAddress) {
         var user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -80,11 +81,6 @@ public class UserServiceImpl implements UserService {
 
     private User findByEmail(String email) throws Exception {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new Exception("User not found"));
-    }
-
-    private User findByUsername(String username) throws Exception {
-        return userRepository.findByUsername(username)
                 .orElseThrow(() -> new Exception("User not found"));
     }
 }
