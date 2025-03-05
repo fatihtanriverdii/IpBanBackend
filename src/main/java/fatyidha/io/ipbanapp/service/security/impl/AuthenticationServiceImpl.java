@@ -26,7 +26,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserService userService;
-    private final IpAddressService ipAddressService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -74,25 +73,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private boolean checkIfIpAddressNotExists(String ipAddress) {
-        return !ipAddressService.existsByIpAddress(ipAddress);
+        return !userService.existsIpAddressByIpAddress(ipAddress);
     }
 
     private void addIpAddress(User user, String userIpAddress) {
         if(checkIfIpAddressNotExists(userIpAddress)){
             IpAddress ipAddress = new IpAddress();
             ipAddress.setIpAddress(userIpAddress);
-            IpAddress savedIpAddress = ipAddressService.saveIpAddress(ipAddress);
+            IpAddress savedIpAddress = userService.saveIpAddress(ipAddress);
             user.getIpAddresses().add(savedIpAddress);
             userService.saveUser(user);
         }else {
-            IpAddress ipAddress = ipAddressService.getByIpAddress(userIpAddress);
+            IpAddress ipAddress = userService.getIpAddressByIpAddress(userIpAddress);
             user.getIpAddresses().add(ipAddress);
             userService.saveUser(user);
         }
     }
 
     private void loginController(User user, String userIpAddress){
-        if(ipAddressService.getIsBannedByIpAddress(userIpAddress)){
+        if(userService.getIsBannedByIpAddress(userIpAddress)){
             throw new SecurityException("Ip address was banned");
         } else if (!user.isActive()) {
             throw new SecurityException("User is not active");

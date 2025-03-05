@@ -1,5 +1,6 @@
 package fatyidha.io.ipbanapp.service.security.impl;
 
+import fatyidha.io.ipbanapp.model.IpAddress;
 import fatyidha.io.ipbanapp.model.User;
 import fatyidha.io.ipbanapp.repository.UserRepository;
 import fatyidha.io.ipbanapp.service.security.IpAddressService;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +44,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getUsers() throws Exception {
+    public List<User> getUsers() {
         return userRepository.findAll();
     }
 
@@ -58,16 +60,90 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public IpAddress saveIpAddress(IpAddress ipAddress){
+        if(existsIpAddressByIpAddress(ipAddress.getIpAddress())){
+            throw new IllegalArgumentException("IpAddress already exists");
+        }
+        return ipAddressService.saveIpAddress(ipAddress);
+    }
+
+    @Override
+    public IpAddress getIpAddressByIpAddress(String ipAddress){
+        return ipAddressService.getByIpAddress(ipAddress);
+    }
+
+    @Override
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
 
-    /*public String banIp(String username){
+    @Override
+    public boolean existsIpAddressByIpAddress(String ipAddress) {
+        return ipAddressService.existsByIpAddress(ipAddress);
+    }
+
+    @Override
+    public String banUser(String username){
         var user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        if(user.isActive()){
+            user.setActive(false);
+            userRepository.saveAndFlush(user);
+            return "user successfully banned";
+        }else {
+            return "user already banned";
+        }
+    }
 
+    @Override
+    public String unBanUser(String username){
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        if(user.isActive()){
+            return "user already unbanned";
+        }else {
+            user.setActive(true);
+            userRepository.saveAndFlush(user);
+            return "user successfully unbanned";
+        }
+    }
 
-    }*/
+    @Override
+    public String banIpAddress(String userIpAddress){
+        if(ipAddressService.existsByIpAddress(userIpAddress)){
+            IpAddress ipAddress = ipAddressService.getByIpAddress(userIpAddress);
+            if(!ipAddress.isBanned()){
+                ipAddress.setBanned(true);
+                ipAddressService.saveIpAddress(ipAddress);
+                return "ipAddress successfully banned";
+            }else{
+                return "ipAddress already banned";
+            }
+        }else{
+            return "ipAddress not found";
+        }
+    }
+
+    @Override
+    public String unBanIpAddress(String userIpAddress){
+        if(ipAddressService.existsByIpAddress(userIpAddress)){
+            IpAddress ipAddress = ipAddressService.getByIpAddress(userIpAddress);
+            if(!ipAddress.isBanned()){
+                return "ipAddress already banned";
+            }else{
+                ipAddress.setBanned(false);
+                ipAddressService.saveIpAddress(ipAddress);
+                return "ipAddress successfully banned";
+            }
+        }else{
+            return "ipAddress not found";
+        }
+    }
+
+    @Override
+    public boolean getIsBannedByIpAddress(String ipAddress){
+        return ipAddressService.getIsBannedByIpAddress(ipAddress);
+    }
 
     @Override
     public boolean banState(String username, String userIpAddress) {

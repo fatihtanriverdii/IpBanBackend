@@ -14,6 +14,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(@Param("email") String email);
     Optional<User> findByUsername(@Param("username") String username);
     boolean existsByEmail(@Param("email") String email);
+    boolean existsByUsername(@Param("username") String username);
     @Query("SELECT u.tokenExpiryDate FROM User u WHERE u.username = :username")
     Date findTokenExpirationDateByUsername(@Param("username") String username);
 }
