@@ -35,9 +35,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public JwtAuthenticationResponseDto register(RegisterRequestDto registerRequestDto, String userIpAddress) throws Exception {
         checkIfEmailExists(registerRequestDto.getEmail());
 
-        var user = User.builder().firstName(registerRequestDto.getFirstName()).lastName(registerRequestDto.getLastName()).username(registerRequestDto.getUsername())
-                .email(registerRequestDto.getEmail()).password(passwordEncoder.encode(registerRequestDto.getPassword())).role(Role.USER)
-                .ipAddresses(new ArrayList<>()).isActive(true).build();
+        User user = new User();
+        user.setFirstName(registerRequestDto.getFirstName());
+        user.setLastName(registerRequestDto.getLastName());
+        user.setUsername(registerRequestDto.getUsername());
+        user.setEmail(registerRequestDto.getEmail());
+        user.setPassword(passwordEncoder.encode(registerRequestDto.getPassword()));
 
         var jwt = jwtService.generateToken(user);
         user.setToken(jwt);
